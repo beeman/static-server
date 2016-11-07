@@ -1,6 +1,6 @@
 # static-server
 
-> A static server based on superstatic
+> 🐝 A static server based on superstatic
 
 ## Configuration
 
@@ -37,6 +37,22 @@ In case of `/__/env.js` there will be an object available on `window.__env`.
 ## Docker
 
 This server is available as a Docker image.
+
+This is an example on how to use it from a `Dockerfile`:
+
+```Dockerfile
+# Base image.
+FROM beeman/static-server:latest
+
+# Copy the app to the image
+COPY dist /srv/app/
+
+# Expose the default port
+EXPOSE 9876
+
+# Run application.
+CMD ["node", "/srv/index.js"]
+```
 
 This is an example on how to use it with `docker-compose`:
 
