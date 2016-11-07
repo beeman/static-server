@@ -1,0 +1,26 @@
+{
+  "name": "static-server",
+  "version": "1.0.0",
+  "description": "A static server based on superstatic",
+  "main": "index.js",
+  "scripts": {
+    "docker-build": "docker build -t beeman/static-server:latest .",
+    "docker-push": "docker push beeman/static-server:latest",
+    "docker-run": "docker run -p 9876:9876 --rm --name static-server beeman/static-server:latest"
+  },
+  "homepage": "https://github.com/beeman/static-server",
+  "keywords": [
+    "fullcube"
+  ],
+  "contributors": [
+    "Bram Borggreve <bborggreve@fullcube.com> (https://github.com/beeman)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beeman/static-server.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "superstatic": "^4.0.3"
+  }
+}
