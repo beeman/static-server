@@ -24,6 +24,10 @@
 
 > Prefix of ENV VARS passed to the client (read below) (default: 'ENV_')
 
+`HTTP_AUTH_USER` and `HTTP_AUTH_USER`
+
+> Username and password to use for Basic HTTP Authentication
+
 ## Environment
 
 The server allows making environment variables available to the static client.
@@ -45,13 +49,13 @@ This is an example on how to use it from a `Dockerfile`:
 FROM beeman/static-server:latest
 
 # Copy the app to the image
-COPY dist /srv/app/
+COPY dist /app/
 
 # Expose the default port
 EXPOSE 9876
 
 # Run application.
-CMD ["node", "/srv/index.js"]
+CMD ["node", "/app/index.js"]
 ```
 
 This is an example on how to use it with `docker-compose`:
@@ -60,14 +64,13 @@ This is an example on how to use it with `docker-compose`:
 static:
   image: beeman/static-server:latest
   volumes:
-    - ./app:/srv/app
+    - ./app:/app
   ports:
     - 9876:9876
   environment:
-    - ENV_API_BASE_URL=https://my-api.now.sh/
-    - ENV_API_VERSION=api/v1
+    - ENV_API_URL=https://api.example.com/
 ```
 
 ## License
 
-MIT - Copyright (c) 2016 Bram Borggreve
+MIT - Copyright (c) 2016-2019 Bram Borggreve
