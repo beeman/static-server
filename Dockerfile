@@ -1,13 +1,16 @@
-# Base image.
-FROM mhart/alpine-node:7.0.0
+FROM node:11-alpine as build-env
 
-# Set /srv as working directory.
-WORKDIR /srv
+WORKDIR /build
 
 # Expose build args.
-COPY package.json /srv/
-RUN npm install && npm cache clean
-COPY . /srv
+COPY package.json package-lock.json /build/
+RUN npm install
+COPY . /build
 
-# Run application.
-CMD ["node", "index.js"]
+FROM gcr.io/distroless/nodejs
+
+COPY --from=build-env /build /app
+
+WORKDIR /app
+
+CMD ["index.js"]
