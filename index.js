@@ -1,14 +1,24 @@
 'use strict'
 
 const superstatic = require('superstatic/lib/server')
+const {
+  DEBUG,
+  ENV_PREFIX,
+  GZIP,
+  HTTP_AUTH_PASS,
+  HTTP_AUTH_USER,
+  NODE_ENV,
+  PORT,
+  ROOT,
+} = process.env
 
 // Start with a default object of env vars
 const env = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: NODE_ENV || 'development',
 }
 
 // We only pick up env vars with this prefix
-const envPrefix = process.env.ENV_PREFIX || 'ENV_'
+const envPrefix = ENV_PREFIX || 'ENV_'
 
 // Get all the keys of process.env
 const envKeys = Object.keys(process.env)
@@ -24,20 +34,26 @@ envKeys.forEach(envKey => {
 
 // This is the configuration of the server
 const options = {
-  port: process.env.PORT || 9876,
+  port: PORT || 9876,
   config: {
-    public: process.env.ROOT || './app'
+    public: ROOT || './app',
   },
   cwd: __dirname,
   errorPage: __dirname + '/error.html',
-  gzip: process.env.GZIP || true,
-  debug: process.env.DEBUG || false,
+  gzip: GZIP || true,
+  debug: DEBUG || false,
   env,
+}
+
+if (HTTP_AUTH_USER && HTTP_AUTH_PASS) {
+  options.protect = [HTTP_AUTH_USER, HTTP_AUTH_PASS].join(':')
 }
 
 const app = superstatic(options)
 
-app.listen((err) => {
-  if (err) { console.log(err) }
-  console.log(`Static server listening on port ${options.port} ...`)
+app.listen(err => {
+  if (err) {
+    console.log(err)
+  }
+  console.log(`Static server listening on http://0.0.0.0:${options.port} ...`)
 })
