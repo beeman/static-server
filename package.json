@@ -6,14 +6,12 @@
   "scripts": {
     "docker-build": "docker build -t beeman/static-server:latest .",
     "docker-push": "docker push beeman/static-server:latest",
-    "docker-run": "docker run -p 9876:9876 --rm --name static-server beeman/static-server:latest"
+    "docker-run": "docker run -p 9876:9876 -e ENV_API_URL='https://api.example.com/' --rm --name static-server beeman/static-server:latest"
   },
   "homepage": "https://github.com/beeman/static-server",
-  "keywords": [
-    "fullcube"
-  ],
+  "keywords": [],
   "contributors": [
-    "Bram Borggreve <bborggreve@fullcube.com> (https://github.com/beeman)"
+    "Bram Borggreve <borggreve@gmail.com> (https://github.com/beeman)"
   ],
   "repository": {
     "type": "git",
@@ -21,6 +19,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "superstatic": "^4.0.3"
+    "superstatic": "^6.0.4"
   }
 }
