@@ -7,15 +7,12 @@ const {
   GZIP,
   HTTP_AUTH_PASS,
   HTTP_AUTH_USER,
-  NODE_ENV,
   PORT,
   ROOT,
 } = process.env
 
-// Start with a default object of env vars
-const env = {
-  NODE_ENV: NODE_ENV || 'development',
-}
+// Start with an empty object of env vars
+const env = {}
 
 // We only pick up env vars with this prefix
 const envPrefix = ENV_PREFIX || 'ENV_'
