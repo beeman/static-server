@@ -12,9 +12,9 @@
 
 > The directory that is served (default: './app')
 
-`GZIP`
+`COMPRESSION`
 
-> Toggle gzip encoding (default: true)
+> Toggle compression (default: true)
 
 `DEBUG`
 

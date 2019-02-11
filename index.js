@@ -2,9 +2,9 @@
 
 const superstatic = require('superstatic/lib/server')
 const {
+  COMPRESSION,
   DEBUG,
   ENV_PREFIX,
-  GZIP,
   HTTP_AUTH_PASS,
   HTTP_AUTH_USER,
   PORT,
@@ -37,7 +37,7 @@ const options = {
   },
   cwd: __dirname,
   errorPage: __dirname + '/error.html',
-  gzip: GZIP || true,
+  compression: COMPRESSION || true,
   debug: DEBUG || false,
   env,
 }
