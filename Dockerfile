@@ -1,16 +1,17 @@
-FROM node:11-alpine as build-env
+FROM node:14.7.0-alpine as build-env
 
-WORKDIR /build
+WORKDIR /workspace
 
-# Expose build args.
-COPY package.json package-lock.json /build/
-RUN npm install
-COPY . /build
+COPY package.json yarn.lock /workspace/
+
+RUN yarn install
+
+COPY . .
 
 FROM gcr.io/distroless/nodejs
 
-COPY --from=build-env /build /app
+WORKDIR /workspace
 
-WORKDIR /app
+COPY --from=build-env /workspace /workspace
 
 CMD ["index.js"]

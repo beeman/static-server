@@ -3,11 +3,6 @@
   "version": "1.0.0",
   "description": "A static server based on superstatic",
   "main": "index.js",
-  "scripts": {
-    "docker-build": "docker build -t beeman/static-server:latest .",
-    "docker-push": "docker push beeman/static-server:latest",
-    "docker-run": "docker run -p 9876:9876 -e ENV_API_URL='https://api.example.com/' --rm --name static-server beeman/static-server:latest"
-  },
   "homepage": "https://github.com/beeman/static-server",
   "keywords": [],
   "contributors": [
