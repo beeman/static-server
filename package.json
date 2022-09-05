@@ -14,6 +14,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "superstatic": "^6.0.4"
+    "superstatic": "^8.0.0"
   }
 }
