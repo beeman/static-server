@@ -1,4 +1,4 @@
-FROM node:14.7.0-alpine as build-env
+FROM node:18.8-alpine as build-env
 
 WORKDIR /workspace
 
