@@ -1,10 +1,12 @@
-FROM node:18.8-alpine as build-env
+FROM node:20.10.0-alpine as build-env
+
+RUN corepack enable && corepack prepare pnpm@8.12.1 --activate
 
 WORKDIR /workspace
 
-COPY package.json yarn.lock /workspace/
+COPY package.json pnpm-lock.yaml /workspace/
 
-RUN yarn install
+RUN pnpm install --no-frozen-lockfile
 
 COPY . .
 
