@@ -1,19 +1,19 @@
-FROM node:20.10.0-alpine as build-env
-
-RUN corepack enable && corepack prepare pnpm@8.12.1 --activate
+FROM oven/bun:latest AS build
 
 WORKDIR /workspace
 
-COPY package.json pnpm-lock.yaml /workspace/
+COPY package.json bun.lock ./
 
-RUN pnpm install --no-frozen-lockfile
+RUN bun install --frozen-lockfile --production
 
 COPY . .
 
-FROM gcr.io/distroless/nodejs
+FROM gcr.io/distroless/nodejs24-debian12
 
 WORKDIR /workspace
 
-COPY --from=build-env /workspace /workspace
+COPY --from=build /workspace /workspace
+
+EXPOSE 9876
 
 CMD ["index.js"]

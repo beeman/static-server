@@ -1,6 +1,7 @@
 'use strict'
 
 const superstatic = require('superstatic/lib/server')
+const zlib = require('zlib')
 const {
   COMPRESSION,
   DEBUG,
@@ -9,6 +10,7 @@ const {
   HTTP_AUTH_USER,
   PORT,
   ROOT,
+  SPA,
 } = process.env
 
 // Start with an empty object of env vars
@@ -23,22 +25,33 @@ const envKeys = Object.keys(process.env)
 // Loop through all of them to see if we need to add the prefixed ones.
 envKeys.forEach(envKey => {
   // If the env var key matches the prefix, add it to the object
-  if (envKey.substr(0, envPrefix.length) === envPrefix) {
+  if (envKey.startsWith(envPrefix)) {
     const shortKey = envKey.replace(envPrefix, '')
     env[shortKey] = process.env[envKey]
   }
 })
 
+// Build superstatic config
+const config = {
+  public: ROOT || './app',
+}
+
+// SPA mode (default: true): rewrite all routes to index.html for client-side routing
+const spaEnabled = SPA !== 'false'
+if (spaEnabled) {
+  config.rewrites = [{ source: '**', destination: '/index.html' }]
+}
+
+const compressionEnabled = COMPRESSION !== 'false'
+
 // This is the configuration of the server
 const options = {
   port: PORT || 9876,
-  config: {
-    public: ROOT || './app',
-  },
+  config,
   cwd: __dirname,
   errorPage: __dirname + '/error.html',
-  compression: COMPRESSION || true,
-  debug: DEBUG || false,
+  compression: false, // We handle compression ourselves for brotli support
+  debug: DEBUG === 'true',
   env,
 }
 
@@ -48,9 +61,70 @@ if (HTTP_AUTH_USER && HTTP_AUTH_PASS) {
 
 const app = superstatic(options)
 
+// Health endpoint — added before superstatic middleware (runs first in connect stack)
+app.use((req, res, next) => {
+  if (req.url === '/__/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ status: 'ok' }))
+    return
+  }
+  next()
+})
+
+// Compression middleware with brotli + gzip + deflate support
+if (compressionEnabled) {
+  app.use((req, res, next) => {
+    const accept = req.headers['accept-encoding'] || ''
+
+    let encoding = null
+    if (accept.includes('br')) encoding = 'br'
+    else if (accept.includes('gzip')) encoding = 'gzip'
+    else if (accept.includes('deflate')) encoding = 'deflate'
+
+    if (!encoding) return next()
+
+    const origWrite = res.write.bind(res)
+    const origEnd = res.end.bind(res)
+    const chunks = []
+
+    res.write = function (chunk) {
+      if (chunk) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+      return true
+    }
+
+    res.end = function (chunk) {
+      if (chunk) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+      const body = Buffer.concat(chunks)
+
+      // Skip compression for small responses (<1KB)
+      if (body.length < 1024) {
+        origWrite(body)
+        return origEnd()
+      }
+
+      let compress
+      if (encoding === 'br') compress = zlib.brotliCompressSync
+      else if (encoding === 'gzip') compress = zlib.gzipSync
+      else compress = zlib.deflateSync
+
+      const compressed = compress(body)
+      res.setHeader('Content-Encoding', encoding)
+      res.removeHeader('Content-Length')
+      origWrite(compressed)
+      origEnd()
+    }
+
+    next()
+  })
+}
+
 app.listen(err => {
   if (err) {
     console.log(err)
   }
-  console.log(`Static server listening on http://0.0.0.0:${options.port} ...`)
+  const features = [
+    spaEnabled ? 'SPA' : null,
+    compressionEnabled ? 'brotli+gzip' : null,
+  ].filter(Boolean).join(', ')
+  console.log(`Static server listening on http://0.0.0.0:${options.port} [${features}]`)
 })
