@@ -1,5 +1,52 @@
 'use strict'
 
+const http = require('http')
+const {
+  REDIRECT_URL,
+} = process.env
+
+// Redirect mode: if REDIRECT_URL is set, redirect all requests and skip everything else
+if (REDIRECT_URL) {
+  // Validate REDIRECT_URL is a valid absolute URL
+  try {
+    new URL(REDIRECT_URL)
+  } catch {
+    console.error(`Error: Invalid REDIRECT_URL "${REDIRECT_URL}". Must be an absolute URL (e.g. https://example.com).`)
+    process.exit(1)
+  }
+
+  const port = process.env.PORT || 9876
+  const statusCode = process.env.REDIRECT_STATUS === '302' ? 302 : 301
+  // Strip trailing slash from target to avoid double slashes
+  const target = REDIRECT_URL.replace(/\/+$/, '')
+
+  const server = http.createServer((req, res) => {
+    // Health endpoint still works in redirect mode
+    if (req.url === '/__/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ status: 'ok', mode: 'redirect' }))
+      return
+    }
+    // Safely parse the request URL to prevent open redirect via protocol-relative paths
+    let location
+    try {
+      const { pathname, search } = new URL(req.url, 'http://dummy.base')
+      location = `${target}${pathname}${search}`
+    } catch {
+      res.writeHead(400, { 'Content-Type': 'text/plain' })
+      res.end('Bad Request')
+      return
+    }
+    res.writeHead(statusCode, { Location: location })
+    res.end()
+  })
+
+  server.listen(port, () => {
+    console.log(`Redirect server listening on http://0.0.0.0:${port} → ${target} [${statusCode}]`)
+  })
+  return
+}
+
 const superstatic = require('superstatic/lib/server')
 const zlib = require('zlib')
 const {

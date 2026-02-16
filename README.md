@@ -47,8 +47,26 @@ COPY dist /workspace/app/
 | `ENV_PREFIX` | `ENV_` | Prefix for env vars passed to the client |
 | `HTTP_AUTH_USER` | — | Username for Basic HTTP Authentication |
 | `HTTP_AUTH_PASS` | — | Password for Basic HTTP Authentication |
+| `REDIRECT_URL` | — | Redirect all requests to this URL (enables redirect mode) |
+| `REDIRECT_STATUS` | `301` | HTTP status code for redirects (`301` or `302`) |
 
 ## Features
+
+### Redirect Mode
+
+Set `REDIRECT_URL` to turn the container into a lightweight redirect server. All requests are redirected to the target URL, preserving the original path.
+
+```yaml
+services:
+  www:
+    image: beeman/static-server:latest
+    environment:
+      - REDIRECT_URL=https://example.com
+```
+
+A request to `http://www.example.com/about` redirects to `https://example.com/about`.
+
+Uses 301 (permanent) by default. Set `REDIRECT_STATUS=302` for temporary redirects. The health endpoint (`/__/health`) still works in redirect mode.
 
 ### SPA Mode
 
