@@ -49,8 +49,11 @@ if (REDIRECT_URL) {
 
 const superstatic = require('superstatic/lib/server')
 const zlib = require('zlib')
+const fs = require('fs')
+const path = require('path')
 const {
   COMPRESSION,
+  CONFIG,
   DEBUG,
   ENV_PREFIX,
   HTTP_AUTH_PASS,
@@ -78,15 +81,44 @@ envKeys.forEach(envKey => {
   }
 })
 
-// Build superstatic config
-const config = {
-  public: ROOT || './app',
+// Load external superstatic config file if present
+// Supports: superstatic.json, firebase.json, or custom path via CONFIG env var
+let fileConfig = {}
+const configCandidates = CONFIG
+  ? [path.resolve(CONFIG)]
+  : [
+      path.join(__dirname, 'app', 'superstatic.json'),
+      path.join(__dirname, 'app', 'firebase.json'),
+    ]
+
+for (const candidate of configCandidates) {
+  if (fs.existsSync(candidate)) {
+    try {
+      fileConfig = JSON.parse(fs.readFileSync(candidate, 'utf-8'))
+      console.log(`Loaded config from ${candidate}`)
+    } catch (err) {
+      console.error(`Error parsing config file ${candidate}: ${err.message}`)
+      process.exit(1)
+    }
+    break
+  }
 }
 
-// SPA mode (default: true): rewrite all routes to index.html for client-side routing
-const spaEnabled = SPA !== 'false'
-if (spaEnabled) {
+// Build superstatic config: file config is the base, env vars override
+const config = {
+  ...fileConfig,
+  public: ROOT || fileConfig.public || './app',
+}
+
+// SPA mode: env var takes precedence over config file
+let spaEnabled = false
+if (SPA === 'false') {
+  // Env var explicitly disables SPA — remove any rewrites from config file too
+  delete config.rewrites
+} else if (!config.rewrites) {
+  // No rewrites from config file and SPA not disabled — add default SPA rewrite
   config.rewrites = [{ source: '**', destination: '/index.html' }]
+  spaEnabled = true
 }
 
 const compressionEnabled = COMPRESSION !== 'false'
@@ -172,6 +204,7 @@ app.listen(err => {
   const features = [
     spaEnabled ? 'SPA' : null,
     compressionEnabled ? 'brotli+gzip' : null,
+    Object.keys(fileConfig).length ? 'config' : null,
   ].filter(Boolean).join(', ')
   console.log(`Static server listening on http://0.0.0.0:${options.port} [${features}]`)
 })

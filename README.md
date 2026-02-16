@@ -39,18 +39,54 @@ COPY dist /workspace/app/
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PORT` | `9876` | Port the server listens on |
-| `ROOT` | `./app` | Directory to serve (relative to `/workspace`) |
-| `SPA` | `true` | SPA mode — unknown routes serve `index.html` |
 | `COMPRESSION` | `true` | Compression with brotli, gzip, and deflate |
+| `CONFIG` | — | Path to a custom superstatic config file |
 | `DEBUG` | `false` | Toggle debug logging |
 | `ENV_PREFIX` | `ENV_` | Prefix for env vars passed to the client |
-| `HTTP_AUTH_USER` | — | Username for Basic HTTP Authentication |
 | `HTTP_AUTH_PASS` | — | Password for Basic HTTP Authentication |
-| `REDIRECT_URL` | — | Redirect all requests to this URL (enables redirect mode) |
+| `HTTP_AUTH_USER` | — | Username for Basic HTTP Authentication |
+| `PORT` | `9876` | Port the server listens on |
 | `REDIRECT_STATUS` | `301` | HTTP status code for redirects (`301` or `302`) |
+| `REDIRECT_URL` | — | Redirect all requests to this URL (enables redirect mode) |
+| `ROOT` | `./app` | Directory to serve (relative to `/workspace`) |
+| `SPA` | `true` | SPA mode — unknown routes serve `index.html` |
 
 ## Features
+
+### Configuration File
+
+Drop a `superstatic.json` (or `firebase.json`) in your app directory to configure advanced features like redirects, custom headers, clean URLs, trailing slashes, and i18n:
+
+```json
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/old-path", "destination": "/new-path", "type": 301 }
+  ],
+  "headers": [
+    {
+      "source": "**/*.@(js|css)",
+      "headers": [{ "key": "Cache-Control", "value": "max-age=31536000" }]
+    }
+  ]
+}
+```
+
+```yaml
+services:
+  web:
+    image: beeman/static-server:latest
+    volumes:
+      - ./dist:/workspace/app:ro
+      - ./superstatic.json:/workspace/app/superstatic.json:ro
+```
+
+The config file is merged with env var settings. Env vars take precedence — for example, `SPA=false` disables SPA mode even if the config file has rewrites.
+
+Set `CONFIG` to use a custom path: `CONFIG=/workspace/my-config.json`.
+
+See the [superstatic documentation](https://github.com/firebase/superstatic#configuration) for all available options.
 
 ### Redirect Mode
 
